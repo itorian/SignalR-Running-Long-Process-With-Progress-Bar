@@ -1,0 +1,42 @@
+﻿@{
+    ViewBag.Title = "Run ajax long running process and display on progress bar";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <button class="btn btn-primary" disabled="disabled" id="btnprogress" onclick="startProgressTask()">
+            Start remote task
+        </button>
+        <br /><br />
+        <div class="progress">
+            <div class="progress-bar" role="progressbar"
+                 aria-valuenow="0"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+                <span class="sr-only" id="workDone"></span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section scripts{
+    <script src="Scripts/jquery.signalR-2.4.1.min.js"></script>
+    <script src="signalr/hubs"></script>
+    <script>
+        $(function () {
+            $.connection.hub.start().done(function () {
+                $('#btnprogress').removeAttr('disabled');
+            });
+            $.connection.progressHub.client.updateProgressBar = function (connectionId, percentage) {
+                if (connectionId === $.connection.hub.id) {
+                    console.log('Work done percent: ' + percentage);
+                    $('.progress-bar').css('width', percentage + '%').attr('aria-valuenow', percentage);
+                }
+            };
+        });
+        function startProgressTask() {
+            var connectionId = $.connection.hub.id;
+            $.post('/home/startprogress/' + connectionId);
+        }
+    </script>
+}
